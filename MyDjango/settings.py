@@ -140,6 +140,14 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
+TEMPLATE_ID = 112142311  # 自己应用ID
+APPKEY = "8cc5b87123y423423412387930004"  # 自己应用Key
+SMS_SIGN = "Python之路"  # 自己腾讯云创建签名时填写的签名内容（使用公众号的话这个值一般是公众号全称或简称）
+
+TENCENT_SMS_TEMPLATE = {
+    "register":54511,
+    'login':548762
+}
 
 try:
 
