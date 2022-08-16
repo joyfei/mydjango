@@ -17,7 +17,7 @@ Including another URLconf
 
 from django.urls import path
 
-from myadmin.views import index,user,site,role,echart,upload,tencent
+from myadmin.views import index,user,site,role,echart,upload
 
 urlpatterns = [
     # 后台首页
@@ -37,6 +37,9 @@ urlpatterns = [
     #文件上传
     path('upload/list', upload.index, name="myadmin_upload_index"),#浏览
 
-    path('send/sms/', tencent.send_sms),#浏览
+
+
+
+
 
 ]
