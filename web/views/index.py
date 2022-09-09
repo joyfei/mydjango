@@ -18,6 +18,7 @@ def index(request):
 def send_sms(request):
     """发送短信"""
     form = SendSmsForm(request,data=request.GET)
+    print(form)
     #只是校验手机号：不能为空、格式是否正确
     if form.is_valid():
         #发短信
@@ -35,9 +36,21 @@ def send_sms(request):
     # else:
     #     return HttpResponse(res['errmsg'])
 
-
-
 def register(request):
     """注册账户"""
+    if request.method == 'GET':
+        form = RegisterModelForm()
+        return render(request, 'web/index/register.html', {'form': form})
+    print(request.POST)
+    form =RegisterModelForm(data=request.POST)
+    if form.is_valid():
+        form.save()
+        return JsonResponse({'status': True , 'data': '/login/'})
+    return JsonResponse({'status': False , 'error': form.errors})
+
+
+
+def login(request):
     form = RegisterModelForm()
-    return render(request, 'web/index/register.html', {'form':form})
+    return render(request, 'web/index/login.html', {'form':form})
+
