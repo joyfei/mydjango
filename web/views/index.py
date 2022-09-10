@@ -1,6 +1,6 @@
 from django.http import HttpResponse
 from django.shortcuts import render,HttpResponse
-from web.forms.account import RegisterModelForm,SendSmsForm
+from web.forms.account import RegisterModelForm,SendSmsForm,LoginSmsForm
 from django.http import JsonResponse
 import random
 from utils.tencent.sms import send_sms_single
@@ -13,6 +13,34 @@ from django.conf import settings
 def index(request):
     """前台首页"""
     return render(request, 'web/index/index.html')
+
+
+def register(request):
+    """注册账户"""
+    if request.method == 'GET':
+        form = RegisterModelForm()
+        return render(request, 'web/index/register.html', {'form': form})
+    print(request.POST)
+    form =RegisterModelForm(data=request.POST)
+    if form.is_valid():
+        form.save()
+        return JsonResponse({'status': True , 'data': '/login/'})
+    return JsonResponse({'status': False , 'error': form.errors})
+
+
+def login_sms(request):
+    """短信登录"""
+    if request.method =='GET':
+        form = LoginSmsForm()
+        print(form)
+        return render(request, 'web/index/login_sms.html', {'form':form})
+    form = LoginSmsForm(request.POST)
+    if form.is_valid():
+        #用户输入正确，登录成功
+        return JsonResponse({'status': True , 'data': "/index/"})
+    return JsonResponse({'status': False , 'error': form.errors})
+
+
 
 
 def send_sms(request):
@@ -36,21 +64,9 @@ def send_sms(request):
     # else:
     #     return HttpResponse(res['errmsg'])
 
-def register(request):
-    """注册账户"""
-    if request.method == 'GET':
-        form = RegisterModelForm()
-        return render(request, 'web/index/register.html', {'form': form})
-    print(request.POST)
-    form =RegisterModelForm(data=request.POST)
-    if form.is_valid():
-        form.save()
-        return JsonResponse({'status': True , 'data': '/login/'})
-    return JsonResponse({'status': False , 'error': form.errors})
 
 
 
-def login(request):
-    form = RegisterModelForm()
-    return render(request, 'web/index/login.html', {'form':form})
+
+
 

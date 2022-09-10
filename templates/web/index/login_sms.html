@@ -1,7 +1,7 @@
 {% extends 'web/basic.html' %}
 {% load static %}
 
-{% block title %} 用户注册 {% endblock %}
+{% block title %}用户短信登录 {% endblock %}
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'web/css/account.css' %}">
@@ -17,7 +17,7 @@
 
 {% block content %}
     <div class="account">
-    <div class="title">用户注册</div>
+    <div class="title">用户短信登录</div>
         <form id = "regForm" method="post" novalidate>
             {% csrf_token %}
             {% for field in form %}
@@ -39,16 +39,9 @@
             {% endfor %}
 
               <div class="row">
-                <div class="col-xs-8">
-                  <div class="checkbox icheck">
-                    <label>
-                      <input type="checkbox"> 我同意 <a href="#">条约</a>
-                    </label>
-                  </div>
-                </div>
                     <!-- /.col -->
-                    <div class="col-xs-4">
-                      <button id="btnSubmit" type="button"  class="btn btn-primary btn-block btn-flat">注册</button>
+                    <div class="col-xs-3">
+                      <button id="btnSubmit" type="button"  class="btn btn-primary btn-block btn-flat">登录</button>
                     </div>
               </div>
         </form>
@@ -63,10 +56,10 @@
         //页面框架加载完成之后自动执行函数
         $(function (){
             bindclickbtnsms();
-            bindClickSubmit();
         });
+
         /*
-        点击提交（注册）
+        点击登录
         */
         function bindClickSubmit() {
             $('#btnSubmit').click(function () {
@@ -74,7 +67,7 @@
                 // 收集表单中的数据（找到每一个字段）$('#regForm').serialize()
                 // 数据ajax发送到后台
                 $.ajax({
-                    url: "{% url 'web_register' %}",
+                    url: "{% url 'web_login_sms' %}",
                     type: "POST",
                     data: $('#regForm').serialize(), // 所有字段数据 + csrf token
                     dataType: "JSON",
@@ -106,7 +99,7 @@
                 $.ajax({
                     url:"{% url 'web_send_sms' %}",//要提交的地址
                     type:"GET",
-                    data:{mobile_phone: mobilePhone ,tpl: "register"},
+                    data:{mobile_phone: mobilePhone ,tpl: "login"},
                     dataType: "JSON",// 将服务端返回的数据反序列化为字典
                     success:function (res){
                         //ajax请求发送成功之后，自动执行的函数；res就是后端返回的值
@@ -125,6 +118,8 @@
                 })
             })
         }
+
+
         /*
         倒计时
         */
@@ -143,9 +138,6 @@
                 }
             }, 1000)
         }
-
-
-
     </script>
 {% endblock %}
 
