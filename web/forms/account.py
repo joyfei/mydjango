@@ -131,5 +131,32 @@ class LoginSmsForm(BootStrapForm,forms.Form):
     mobile_phone = forms.CharField(label='手机号', validators=[RegexValidator(r'^(1[3|4|5|6|7|8|9])\d{9}$', '手机格式错误'), ])
     code = forms.CharField(label='验证码', widget=forms.TextInput(attrs={'placeholder': '请输入验证码'}))
 
+    def clean_mobile_phone(self):
+        mobile_phone = self.cleaned_data['mobile_phone']
+        exists = models.UserInfo.objects.filter(mobile_phone=mobile_phone).exists()
+        # user_object = models.UserInfo.objects.filter(mobile_phone=mobile_phone).first()
+        if not exists:
+            raise ValidationError('手机号不存在')
+        return exists
+
+    def clean_code(self):
+        code = self.cleaned_data['code']
+        mobile_phone = self.cleaned_data.get('mobile_phone')
+
+        #手机号不存在，则验证码无需再校验
+        if not mobile_phone:
+            return code
+
+        # 验证码写入redis(django-redis)
+        conn = get_redis_connection()
+        redis_code = conn.get(mobile_phone)
+        if not redis_code:
+            raise ValidationError('验证码失效或未发送，请重新发送')
+        redis_str_code = redis_code.decode('utf-8')
+        if code.strip() != redis_str_code.strip():
+            raise ValidationError('验证码错误，请重新输入')
+        return code
+
+
 
 

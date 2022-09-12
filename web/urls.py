@@ -21,7 +21,8 @@ from web.views import index
 
 urlpatterns = [
    path('', index.index, name="index"),
-
+   #用户登录
+   path('login/', index.login, name="web_login"),
    #短信登录账户
    path('login/sms/', index.login_sms, name="web_login_sms"),
    #注册账户

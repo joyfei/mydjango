@@ -5,6 +5,7 @@ from django.http import JsonResponse
 import random
 from utils.tencent.sms import send_sms_single
 from django.conf import settings
+from web import models
 
 """
 用户账户相关功能：注册，短信，登录，注销
@@ -24,7 +25,7 @@ def register(request):
     form =RegisterModelForm(data=request.POST)
     if form.is_valid():
         form.save()
-        return JsonResponse({'status': True , 'data': '/login/'})
+        return JsonResponse({'status': True , 'data': '/login/sms/'})
     return JsonResponse({'status': False , 'error': form.errors})
 
 
@@ -36,10 +37,21 @@ def login_sms(request):
         return render(request, 'web/index/login_sms.html', {'form':form})
     form = LoginSmsForm(request.POST)
     if form.is_valid():
-        #用户输入正确，登录成功
-        return JsonResponse({'status': True , 'data': "/index/"})
-    return JsonResponse({'status': False , 'error': form.errors})
 
+        #用户输入正确，登录成功
+        mobile_phone = form.cleaned_data['mobile_phone']
+        print(mobile_phone)
+        #用户信息放入session
+        user_object=models.UserInfo.objects.filter(mobile_phone=mobile_phone).first()
+        print(user_object)
+        request.session['user_id'] = user_object.id
+        request.session['user_name'] =user_object.username
+
+        return JsonResponse({'status': True,'data': "/index/"})
+    return JsonResponse({'status': False, 'error': form.errors})
+
+def login(request):
+    """用户名和密码登录"""
 
 
 
