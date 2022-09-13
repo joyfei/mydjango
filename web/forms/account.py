@@ -80,7 +80,7 @@ class RegisterModelForm(BootStrapForm,forms.ModelForm):
         if not redis_code:
             raise ValidationError('验证码失效或未发送，请重新发送')
         redis_str_code=redis_code.decode('utf-8')
-        print(redis_str_code)
+
         if code.strip() != redis_str_code.strip():
             raise ValidationError('验证码错误，请重新输入')
         return code
@@ -121,7 +121,6 @@ class SendSmsForm(forms.Form):
 
         #验证码写入redis(django-redis)
         conn = get_redis_connection()
-        print('conn:',conn)
         conn.set(mobile_phone,code, ex=60)
 
         return mobile_phone
@@ -158,5 +157,31 @@ class LoginSmsForm(BootStrapForm,forms.Form):
         return code
 
 
+class loginForm(BootStrapForm,forms.Form):
+    username=forms.CharField(label='邮箱或手机号')
+    password=forms.CharField(label='密码',widget=forms.PasswordInput())
+    code = forms.CharField(label='图片验证码')
 
+    def __init__(self,request, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.request = request
+
+    def clean_code(self):
+        """钩子 图片验证码是否正确"""
+        # 读取用户输入的验证码
+        code = self.cleaned_data['code']
+        #去session获取自己的验证码
+        session_code = self.request.session.get('image_code')
+
+        if not session_code:
+            raise ValidationError('验证码已过期，请重新获取')
+
+        if code.strip().upper() != session_code.strip().upper():
+            raise ValidationError('验证码输入错误')
+        return code
+
+    def clean_password(self):
+        password = self.cleaned_data['password']
+        #加密返回
+        return encrypt.md5(password)
 

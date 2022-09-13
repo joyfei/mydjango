@@ -1,11 +1,10 @@
-from django.http import HttpResponse
-from django.shortcuts import render,HttpResponse
-from web.forms.account import RegisterModelForm,SendSmsForm,LoginSmsForm
+from django.shortcuts import render,HttpResponse,redirect
+from web.forms.account import RegisterModelForm,SendSmsForm,LoginSmsForm,loginForm
 from django.http import JsonResponse
+from web import models
 import random
 from utils.tencent.sms import send_sms_single
 from django.conf import settings
-from web import models
 
 """
 用户账户相关功能：注册，短信，登录，注销
@@ -21,29 +20,27 @@ def register(request):
     if request.method == 'GET':
         form = RegisterModelForm()
         return render(request, 'web/index/register.html', {'form': form})
-    print(request.POST)
+    print('注册账户',request.POST)
     form =RegisterModelForm(data=request.POST)
     if form.is_valid():
         form.save()
-        return JsonResponse({'status': True , 'data': '/login/sms/'})
+        return JsonResponse({'status': True , 'data': '/login/'})
     return JsonResponse({'status': False , 'error': form.errors})
 
 
 def login_sms(request):
     """短信登录"""
-    if request.method =='GET':
+    if request.method == 'GET':
         form = LoginSmsForm()
-        print(form)
+        print('短信登录',request.GET)
         return render(request, 'web/index/login_sms.html', {'form':form})
     form = LoginSmsForm(request.POST)
     if form.is_valid():
 
         #用户输入正确，登录成功
         mobile_phone = form.cleaned_data['mobile_phone']
-        print(mobile_phone)
         #用户信息放入session
         user_object=models.UserInfo.objects.filter(mobile_phone=mobile_phone).first()
-        print(user_object)
         request.session['user_id'] = user_object.id
         request.session['user_name'] =user_object.username
 
@@ -52,8 +49,39 @@ def login_sms(request):
 
 def login(request):
     """用户名和密码登录"""
+    if request.method == 'GET':
+        form = loginForm(request)
+        return render(request, 'web/index/login.html', {'form': form})
+    form = loginForm(request,data=request.POST)
+    if form.is_valid():
+        username = form.cleaned_data['username']
+        password = form.cleaned_data['password']
+        from django.db.models import Q
+        #  (手机=username and pwd=pwd) or (邮箱=username and pwd=pwd)
+        user_object = models.UserInfo.objects.filter(Q(email=username) | Q(mobile_phone=username)).filter(password=password).first()
+
+        if user_object:
+            #用户名和密码正确
+            return redirect('/index/')
+        form.add_error('username','用户名或密码错误')
+    return render(request, 'web/index/login.html', {'form': form})
 
 
+
+
+def image_code(request):
+    """生成图片验证码"""
+    from io import BytesIO
+    from utils.image_code import check_code
+
+    image_object, code = check_code()
+    print('验证码：',code)
+    request.session['image_code']=code
+    request.session.set_expiry(60) #主动修改session过期时间为60s
+
+    stream =BytesIO()
+    image_object.save(stream,'png')
+    return HttpResponse(stream.getvalue())
 
 def send_sms(request):
     """发送短信"""
@@ -66,15 +94,6 @@ def send_sms(request):
         return JsonResponse({'status':True})
     return JsonResponse({'status':False,'error':form.errors})
 
-    # template_id=settings.TENCENT_SMS_TEMPLATE.get(tpl)
-    # if not template_id:
-    #     return HttpResponse('模板不存在')
-    # code = random.randrange(1000,9999)
-    # res=send_sms_single('15131255089',template_id,[code,])
-    # if res['result'] == 0:
-    #     return HttpResponse('成功')
-    # else:
-    #     return HttpResponse(res['errmsg'])
 
 
 
